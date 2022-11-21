@@ -11,7 +11,5 @@ class Program
 		int Input = Int32.Parse(_str);
 		CardGame game = new CardGame(Input);
 		game.Run();
-		//Card Card1 = new Card(1);
-		//Console.WriteLine(Card1.Id);
 	}
 }

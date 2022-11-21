@@ -1,54 +1,94 @@
 ﻿
 using CardLibrary;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MemoryGame
 {
     public class CardGame
     {
         private int _num_cards;
+        
         private List<Card> _cards = new List<Card>();
         
-
         public int NumCards { get { return _num_cards; } }
-        public List<Card> Cards { get { return _cards; } }
         
+        public List<Card> Cards { get { return _cards; } }
+        public Board Board;
 
         private bool Init(int num_cards)
         {
             if (num_cards > 0 && num_cards % 2 == 0 && num_cards <= 36)
             {
-                Console.WriteLine("Card IDs:");
-
                 //generate num_cards new cards
-                //each card has id i
                 for (int i = 0; i < num_cards; i++)
                 {
                     Cards.Add(new Card(i));
-                    Console.WriteLine(Cards[i].Id);
                 }
-                Board GameBoard = new Board(Cards);
-                Console.WriteLine("Shuffle");
                 Shuffle(Cards);
-                foreach (Card card in Cards)
-                    Console.WriteLine(card.Id);
+                Board = new Board(Cards);
+                Console.WriteLine("Here is your board");
+                Board.Print();
+
             }
             else
             {
-                Console.Error.WriteLine("Enter an even number between 2 and 36 (inclusive)");
-                return false;
+                //Console.Error.WriteLine("Enter an even number between 2 and 36 (inclusive)");
+                throw new ArgumentException(String.Format("Number of cards must be an even integer between 2 and 26"));
             }
             return true;
         }
         public void Run()
         {
+            //Initialize
             Init(NumCards);
 
-            //shuffle()
-            //printBoard()
-            //monitor()
+            //monitor
+            while (true) 
+            {
 
-            return;
+                // change this to input method
+                // if !inputValid restart input method
+                Console.WriteLine("Please enter card to flip");
+                string? input = Console.ReadLine();
+                string[] strings = input.Split(" ");
+                if (strings.Length != 2)
+                {
+                    Console.Error.WriteLine("Lolno");
+                    return;
+                }
+
+                int x;
+                int y;
+                bool xCheck = int.TryParse(strings[0], out x);
+                bool yCheck = int.TryParse(strings[1], out y);
+
+                if (!(xCheck && yCheck))
+                {
+                    Console.Error.WriteLine("Input must be integers");
+                    return;
+                }
+
+
+                Board.Flip(x, y);
+                Board.MatchList.Add(Board.Squares[y][x]);
+                Board.CompareMatchList();
+                Board.Print();
+
+
+                //Has game ended?
+                    //if all cards are matched -> end game, show score
+                if (Board.Squares.All
+                        ( row => row.All
+                            ( card => card.Matched ) 
+                        )
+                    )
+                {
+                    Console.WriteLine("You won!");
+                    Console.WriteLine($"You spent {Board.Moves} moves!");
+                    return;
+                }
+            }
         }
         private void End()
         {
@@ -82,15 +122,6 @@ namespace MemoryGame
             }
         }
 
-        private bool PrintBoard()
-        {
-            //load card list into 2D array
-
-            //foreach in array:
-            // print card to console
-            // print flipped state along with card
-            return true;
-        }
 
         private void Monitor()
         {
