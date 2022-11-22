@@ -2,6 +2,7 @@
 using CardLibrary;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace MemoryGame
 {
@@ -33,44 +34,47 @@ namespace MemoryGame
             }
             else
             {
-                //Console.Error.WriteLine("Enter an even number between 2 and 36 (inclusive)");
-                throw new ArgumentException(String.Format("Number of cards must be an even integer between 2 and 26"));
+                Console.Error.WriteLine("Enter an even number between 2 and 36 (inclusive)");
+                return false;
             }
             return true;
         }
         public void Run()
         {
             //Initialize
-            Init(NumCards);
-
+            if (!Init(NumCards))
+                return;
             //monitor
             while (true) 
             {
-
-                // change this to input method
-                // if !inputValid restart input method
                 Console.WriteLine("Please enter card to flip");
-                string? input = Console.ReadLine();
-                string[] strings = input.Split(" ");
-                if (strings.Length != 2)
-                {
-                    Console.Error.WriteLine("Lolno");
-                    return;
-                }
-
+                
                 int x;
                 int y;
-                bool xCheck = int.TryParse(strings[0], out x);
-                bool yCheck = int.TryParse(strings[1], out y);
-
-                if (!(xCheck && yCheck))
-                {
-                    Console.Error.WriteLine("Input must be integers");
-                    return;
+                //(Input valid? , (x, y))
+                (bool, (int?, int?)) input = VerifyInput(Console.ReadLine());
+                
+                // if input is invalid, restart loop
+                if (!input.Item1)
+                    continue;
+                else
+                {                    
+                    x = input.Item2.Item1 ?? -1;
+                    y = input.Item2.Item2 ?? -1;
                 }
-
-
-                Board.Flip(x, y);
+                
+                try 
+                { 
+                    Board.Flip(x, y);
+                }
+                catch(IndexOutOfRangeException e) 
+                {
+                    //Console.Error.WriteLine(e.ToString());
+                    Console.Error.WriteLine("Index out of range. Please try again");
+                    Console.WriteLine();
+                    continue;
+                }
+                
                 Board.MatchList.Add(Board.Squares[y][x]);
                 Board.CompareMatchList();
                 Board.Print();
@@ -93,6 +97,33 @@ namespace MemoryGame
         private void End()
         {
             return;
+        }
+
+        private (Boolean, (int?, int?)) VerifyInput(String input)
+        {
+            //string? input = Console.ReadLine();
+            //string s = input;
+            string[] strings = input.Split(" ");
+            if (strings.Length != 2)
+            {
+                Console.Error.WriteLine("Enter two coordinates and separate with space");
+                Console.WriteLine();
+                return (false, (null, null));
+            }
+
+            int x;
+            int y;
+            bool xCheck = int.TryParse(strings[0], out x);
+            bool yCheck = int.TryParse(strings[1], out y);
+
+            if (!(xCheck && yCheck))
+            {
+                Console.Error.WriteLine("Input must be integers");
+                Console.WriteLine();
+                return (false, (null, null));
+            }
+
+            return (true, (x, y));
         }
 
         private void Shuffle(List<Card> Cards)
@@ -132,9 +163,6 @@ namespace MemoryGame
         {
             _num_cards = num_cards;
 
-            //create board
-            // board columns = num_cards^1/2
-            // board row = 
         }
     }
 }
