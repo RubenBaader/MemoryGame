@@ -3,6 +3,10 @@ using CardLibrary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Text.Json;
+using System.Xml.Linq;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace MemoryGame
 {
@@ -16,6 +20,20 @@ namespace MemoryGame
         
         public List<Card> Cards { get { return _cards; } }
         public Board Board;
+
+        public struct GameData 
+        {
+            public int NumCards;
+            public string PlayerName;
+            public int Moves;
+
+            public GameData(int cards, string name, int moves) 
+            {
+                NumCards = cards;
+                PlayerName = name;
+                Moves = moves;
+            }
+        }
 
         private bool Init(int num_cards)
         {
@@ -90,12 +108,32 @@ namespace MemoryGame
                 {
                     Console.WriteLine("You won!");
                     Console.WriteLine($"You spent {Board.Moves} moves!");
-                    return;
+                    break;
                 }
             }
+            End();
         }
-        private void End()
+        public void End()
         {
+            //Info from game: num_moves, num_cards, player name (console input)
+            //Info from file: As above, but for all games ever
+
+            Console.WriteLine("Do you want to save your score? (press n for no)");
+            var ans = Console.ReadKey();
+            if (ans.KeyChar == 'n')
+                return;
+
+
+            Console.WriteLine("Please enter your name");
+            string? playerName = Console.ReadLine();
+
+
+            GameData data = new GameData(NumCards, playerName, Board.Moves);
+            DataBase dataBase = new DataBase();
+            dataBase.Insert(data);
+
+            //Console.WriteLine("End method ended");
+
             return;
         }
 
