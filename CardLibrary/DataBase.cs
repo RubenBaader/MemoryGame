@@ -2,71 +2,122 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using static MemoryGame.CardGame;
 
 namespace MemoryGame
 {
     public class DataBase
     {
-        //Data to contain: Username, num_moves - and how many cards the game had
-        //Format: JSON
-        //{key: value} = 
-        // {cards_in_game : [{player_name, #moves}, {player_name, #moves}...]}
-        public int NumCards { get; set; }
-        public string Name { get; set; }
-        public int Moves { get; set; }
-        public string PathDB { get; set; }
+        //Data to contain: Game size (key), player name, number of moves
+        //Format: Json  { GameKey : [{player_name, #moves}, {player_name, #moves}...] }
 
-        private JsonObject dataBase;
+        private string GameKey;
+        private string PathDB { get; set; }
 
-        // db.Insert(struct GameData);
-            //          GameData contains num_cards, num_moves, player_name
-            // db.PrintHighScores()
+        public JObject dataBase;
+
+        //test json
+        private string JsonTest = "{ '2' : [{ 'hello' : 2 }, { 'hello' : 3 }] }";
+
+
+        private class HScore
+        {
+            public string name { get; set; }
+            public int score { get; set; }
+
+            public HScore(string name, int score) 
+            { 
+                this.name = name; 
+                this.score = score; 
+            }
+        };
+
 
         private bool LoadDataBase()
         {
-            //read data from file
-            string testData = File.ReadAllText(PathDB);
-            //convert to json
-            dataBase = JsonObject.Parse(testData).AsObject();
+            //read data from file - use try / catch
+            //string testData = File.ReadAllText(PathDB);
+            dataBase = JObject.Parse(JsonTest);
 
             return true;
         }
 
+
         public void Insert(GameData gamedata)
         {
-            string NumOfCards = gamedata.NumCards.ToString();
-            
-            if (!dataBase.ContainsKey(NumOfCards))
-                dataBase.Add(NumOfCards, new JsonObject() { { gamedata.PlayerName, gamedata.Moves } });
+            GameKey = gamedata.NumCards.ToString();
 
-            
-            else if (dataBase[NumOfCards].AsObject().ContainsKey(gamedata.PlayerName))
-                dataBase[NumOfCards].AsObject()[gamedata.PlayerName] = gamedata.Moves < dataBase[NumOfCards].AsObject()[gamedata.PlayerName].GetValue<int>() ? gamedata.Moves : dataBase[NumOfCards].AsObject()[gamedata.PlayerName];
+            //number of cards in game is added as key in the database, unless it already exists
+            //      add the current game's stats to the array of game stats
+            if (!dataBase.ContainsKey(GameKey))
+            {
+                dataBase.Add(
+                    new JProperty(
+                        GameKey, 
+                        new JArray(
+                            new JObject 
+                            {
+                                { gamedata.PlayerName, gamedata.Moves }
+                            }
+                        )
+                    )
+                );
+            }
             else
-                dataBase[NumOfCards].AsObject().Add(gamedata.PlayerName, gamedata.Moves);
+            {
+                JArray TempArr = (JArray)dataBase[GameKey];
+                TempArr.Add(new JObject { { gamedata.PlayerName, gamedata.Moves } });
+                dataBase[GameKey] = TempArr;
+            }
 
-            File.WriteAllText(PathDB, dataBase.ToString());
-            Console.WriteLine(dataBase.ToString());
+        }
+
+        //extract the relevant array for this game's number of cards and sort it by game moves in ascending order
+        public void Sort()
+        {
+            JArray SortArr = (JArray)dataBase[GameKey];
+            List<HScore> SortList = new List<HScore>();
+
+            //extract JProps from JObjects
+            foreach (JObject item in SortArr)
+            {
+                HScore PropHolder = new HScore("", -1);
+                foreach (JProperty prop in item.Properties())
+                {
+                    PropHolder.name = prop.Name;
+                    PropHolder.score = (int)prop.Value;
+                }
+                SortList.Add(PropHolder);
+            }
+
+            //sort by extracted prop value
+            var DoneSorting = SortList.OrderBy(x => x.score);
+
+            //recompress props to key:value pairs
+            JArray SortedArr = new JArray();
+            foreach (HScore item in DoneSorting)
+            {
+                SortedArr.Add(new JObject{ { item.name, item.score } } );
+            }
+
+            dataBase[GameKey] = SortedArr;
         }
 
         public void Print()
         {
             Console.WriteLine("Look how well you did!");
+            Console.WriteLine($"Cards in game: {GameKey}" );
             Console.WriteLine();
 
-            // Outcome of my desires:
-            //  DB written to list and sorted by lowest #moves
-            // Logic
-            //  Foreach element in #Numcards key: add Json node to a list
-            //  Sort list by #Moves
-            //  Return list and print it to console
-            // "Key" challenge: (get it?)
-            //  How to sort by the #moves value, when key and value are the same list item?
-
+            foreach (JObject score in dataBase[GameKey])
+                Console.WriteLine(score.First.ToString().PadRight(12) );
         }
 
         public DataBase()
@@ -76,7 +127,6 @@ namespace MemoryGame
             Directory.CreateDirectory(directory);
             PathDB = Path.Combine(Environment.CurrentDirectory, directory, fileName);
 
-            //Console.WriteLine("This is the DB path: " + PathDB);
             LoadDataBase();
         }
     }

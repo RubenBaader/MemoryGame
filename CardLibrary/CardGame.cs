@@ -85,7 +85,7 @@ namespace MemoryGame
                 { 
                     Board.Flip(x, y);
                 }
-                catch(IndexOutOfRangeException e) 
+                catch(IndexOutOfRangeException) 
                 {
                     //Console.Error.WriteLine(e.ToString());
                     Console.Error.WriteLine("Index out of range. Please try again");
@@ -131,6 +131,8 @@ namespace MemoryGame
             GameData data = new GameData(NumCards, playerName, Board.Moves);
             DataBase dataBase = new DataBase();
             dataBase.Insert(data);
+            dataBase.Sort();
+            dataBase.Print();
 
             //Console.WriteLine("End method ended");
 
