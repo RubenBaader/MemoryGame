@@ -24,7 +24,7 @@ namespace MemoryGame
         public JObject dataBase;
 
         //test json
-        private string JsonTest = "{ '2' : [{ 'hello' : 2 }, { 'hello' : 3 }] }";
+        //private string JsonTest = "{ '2' : [{ 'hello' : 2 }, { 'hello' : 3 }] }";
 
 
         private class HScore
@@ -42,9 +42,23 @@ namespace MemoryGame
 
         private bool LoadDataBase()
         {
-            //read data from file - use try / catch
-            //string testData = File.ReadAllText(PathDB);
-            dataBase = JObject.Parse(JsonTest);
+            //read data from file, using try/catch to emulate the possibility of failing a load from an imaginary server
+            string json;
+            try
+            {
+                json = File.ReadAllText(PathDB);
+            }
+            catch
+            {
+                Console.WriteLine("Failed to load database");
+                return false;
+            }
+
+            //verify json format
+            if (!json.Contains('{') || !json.Contains('}'))
+                dataBase = new JObject();
+            else
+                dataBase = JObject.Parse(json);
 
             return true;
         }
@@ -108,6 +122,24 @@ namespace MemoryGame
             }
 
             dataBase[GameKey] = SortedArr;
+        }
+
+        public bool Save()
+        {
+            //write db to file - ensure that save succeeds
+
+            try
+            {
+                //save data
+                File.WriteAllText(PathDB, dataBase.ToString());
+            }
+            catch
+            {
+                Console.WriteLine("Failed to save data");
+                return false;
+            }
+
+            return true;
         }
 
         public void Print()

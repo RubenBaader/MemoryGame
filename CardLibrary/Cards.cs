@@ -25,7 +25,7 @@ namespace CardLibrary
                 else
                     _icon = BackImg;
                 if (_matched)
-                    _icon = "";
+                    _icon = " ";
                 return _icon; 
             } 
             set { _icon = value.ToString(); } 

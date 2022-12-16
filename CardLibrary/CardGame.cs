@@ -133,6 +133,7 @@ namespace MemoryGame
             dataBase.Insert(data);
             dataBase.Sort();
             dataBase.Print();
+            dataBase.Save();
 
             //Console.WriteLine("End method ended");
 

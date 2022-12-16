@@ -52,9 +52,8 @@ namespace CardLibrary
             foreach (Card[] row in Squares)
             {
                 foreach (Card card in row)
-                {
-                    Console.Write(card.Icon.PadRight(3));
-                }
+                    Console.Write($"|{card.Icon}|".PadRight(3));
+
                 Console.WriteLine();
             }
             Console.WriteLine();
