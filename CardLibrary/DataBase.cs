@@ -154,7 +154,7 @@ namespace MemoryGame
 
         public DataBase()
         { 
-            string fileName = "yaboi.json";
+            string fileName = "Highscores.json";
             string directory = @"Data\";
             Directory.CreateDirectory(directory);
             PathDB = Path.Combine(Environment.CurrentDirectory, directory, fileName);
